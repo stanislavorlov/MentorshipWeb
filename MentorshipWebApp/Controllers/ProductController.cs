@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using MentorshipWebApp.Interface;
 using MentorshipWebApp.Model;
+using Microsoft.Extensions.Options;
 
 namespace MentorshipWebApp.Controllers
 {
@@ -12,15 +13,40 @@ namespace MentorshipWebApp.Controllers
     {
         private IProductService ProductService { get; set; }
 
-        public ProductController(IProductService productService)
+        private IConfiguration configuration { get; set; }
+
+        private ILogger<ProductController> logger { get; set; }
+
+        private ILoggerProvider loggerProvider { get; set; }
+
+        private ILoggerFactory loggerFactory { get; set; }
+
+        public ProductController(IProductService productService,
+            IOptions<ProductSettings> options,
+            ILogger<ProductController> logger,
+            ILoggerProvider loggerProvider,
+            ILoggerFactory loggerFactory)
         {
             ProductService = productService;
+            this.logger = logger;
         }
 
         [HttpGet("{id}")]
         public IActionResult Action([FromQuery] int id)
         {
-            ProductService.AddProduct(new Product { Id = id });
+            logger.LogDebug("Entered");
+            logger.LogDebug("asdasd");
+
+            try
+            {
+                ProductService.AddProduct(new Product { Id = id });
+
+                logger.LogInformation("Succesfully added");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Error occured during bla bla", ex);
+            }
 
             return Ok("action");
         }

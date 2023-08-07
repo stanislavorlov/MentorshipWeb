@@ -2,8 +2,20 @@
 using MentorshipWebApp;
 using MentorshipWebApp.Interface;
 using MentorshipWebApp.Repositories;
+using MentorshipWebApp.Model;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddCommandLine(args);
+builder.Configuration.AddEnvironmentVariables();
+
+builder.Configuration.AddJsonFile("appsettings.json");
+
+builder.Services.Configure<ProductSettings>(builder.Configuration.GetSection("ProductSettingsConfiguration"));
+
+builder.Logging
+    .AddConsole()
+    .SetMinimumLevel(LogLevel.Debug);
 
 // every service invocation generates a new instance per Method
 builder.Services.AddSingleton<IProductService, ProductService>();
