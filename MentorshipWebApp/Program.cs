@@ -13,9 +13,17 @@ builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services.Configure<ProductSettings>(builder.Configuration.GetSection("ProductSettingsConfiguration"));
 
+var loggerFactory = LoggerFactory.Create(builder =>
+{
+    builder.AddConsole();
+    builder.SetMinimumLevel(LogLevel.Debug);
+});
+
+//builder.Services.AddSingleton<ILoggerFactory>(loggerFactory);
+
 builder.Logging
-    .AddConsole()
-    .SetMinimumLevel(LogLevel.Debug);
+    .AddConsole();
+    //.SetMinimumLevel(LogLevel.Debug);
 
 // every service invocation generates a new instance per Method
 builder.Services.AddSingleton<IProductService, ProductService>();

@@ -23,19 +23,24 @@ namespace MentorshipWebApp.Controllers
 
         public ProductController(IProductService productService,
             IOptions<ProductSettings> options,
-            ILogger<ProductController> logger,
-            ILoggerProvider loggerProvider,
-            ILoggerFactory loggerFactory)
+            ILogger<ProductController> logger
+            //ILoggerProvider loggerProvider,
+            //ILoggerFactory loggerFactory
+            )
         {
             ProductService = productService;
             this.logger = logger;
+            //this.loggerFactory = loggerFactory;
         }
 
         [HttpGet("{id}")]
         public IActionResult Action([FromQuery] int id)
         {
-            logger.LogDebug("Entered");
-            logger.LogDebug("asdasd");
+            //var logger = this.loggerFactory.CreateLogger<ProductController>();
+
+            logger.LogDebug("Debug Log");
+            logger.LogInformation("Information Log");
+            logger.LogWarning("Warning Log");
 
             try
             {
