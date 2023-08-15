@@ -3,6 +3,7 @@ using MentorshipWebApp;
 using MentorshipWebApp.Interface;
 using MentorshipWebApp.Repositories;
 using MentorshipWebApp.Model;
+using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,13 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services.Configure<ProductSettings>(builder.Configuration.GetSection("ProductSettingsConfiguration"));
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(o => {
+    o.IdleTimeout = TimeSpan.FromMinutes(20);
+    o.Cookie.HttpOnly = true;
+    o.Cookie.IsEssential = true;
+});
 
 var loggerFactory = LoggerFactory.Create(builder =>
 {
@@ -57,6 +65,8 @@ builder.Services.AddSwaggerGen(options =>
         }
     }));
 
+builder.Services.AddControllers();
+
 builder.Services
     .AddAuthentication()
     .AddCookie();
@@ -80,4 +90,42 @@ app.UseSwaggerUI();
 
 app.MapControllers();
 
-app.Run();      //start application
+if (builder.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
+app.UseExceptionHandler(config => config.Run(async context => await context.Response.WriteAsync("")));
+
+app.UseStatusCodePages(async (StatusCodeContext statusCodeContext) =>
+{
+    var response = statusCodeContext.HttpContext.Response;
+
+    switch (response.StatusCode)
+    {
+        case 401:
+            await response.WriteAsync("");
+            break;
+        case 403:
+            response.Redirect("/Login");
+            break;
+        case 404:
+        case 400:
+        case 500:
+            //_logger.LogError("");
+            break;
+    }
+});
+
+app.UseSession();
+
+//app.Run(async (context) =>
+//{
+//    int a = 5;
+//    int b = 0;
+//    int c = a / b;
+        
+//    await context.Response.WriteAsync(c.ToString());
+//});
+
+app.Run();

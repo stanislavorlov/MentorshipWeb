@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using MentorshipWebApp.Interface;
 using MentorshipWebApp.Model;
 using Microsoft.Extensions.Options;
+using System.Text;
 
 namespace MentorshipWebApp.Controllers
 {
@@ -36,6 +37,12 @@ namespace MentorshipWebApp.Controllers
         public IActionResult Action([FromQuery] int id)
         {
             var logger = this.loggerFactory.CreateLogger<ProductController>();
+
+            var context = HttpContext;
+
+            HttpContext.Session.Set("key", Encoding.UTF8.GetBytes("Hello world!"));
+
+            var features = context.Features.ToList();
 
             logger.LogDebug("Debug Log");
             logger.LogInformation("Information Log");
