@@ -43,7 +43,9 @@ builder.Services.AddSingleton<IProductRepo, ProductRepo>();
 //builder.Services.AddSingleton<IProductService, ProductService3>();
 
 builder.Services
-    .AddControllers()
+    .AddControllers(options =>
+    {
+    })
     .AddMvcOptions((options) => { });
 
 builder.Services.AddSwaggerGen(options =>
@@ -94,6 +96,12 @@ if (builder.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
+
+app.UseRouting();
+app.UseEndpoints(c =>
+{
+    
+});
 
 app.UseExceptionHandler(config => config.Run(async context => await context.Response.WriteAsync("")));
 

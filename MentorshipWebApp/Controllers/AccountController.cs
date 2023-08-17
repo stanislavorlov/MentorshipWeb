@@ -1,14 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MentorshipWebApp.Model;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MentorshipWebApp.Controllers
 {
+    [ApiController]
     [Route("[controller]/[action]")]
-    public class AccountController : Controller
+    public class AccountController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult Login(string? ReturnUrl)
+        [HttpGet()]
+        [Produces()]
+        [ProducesResponseType(typeof(Person), 200)]
+        [ProducesResponseType(typeof(string), 204)]
+        public IActionResult Login([Bind("name,age")] Person person)
         {
-            return Ok("Login page");
+            Results.NoContent();
         }
     }
 }
