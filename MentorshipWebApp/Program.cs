@@ -98,10 +98,12 @@ if (builder.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+/*
 app.UseEndpoints(c =>
 {
     
 });
+*/
 
 app.UseExceptionHandler(config => config.Run(async context => await context.Response.WriteAsync("")));
 
