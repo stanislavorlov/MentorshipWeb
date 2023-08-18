@@ -8,12 +8,12 @@ namespace MentorshipWebApp.Controllers
     public class AccountController : ControllerBase
     {
         [HttpGet()]
-        [Produces()]
+        [Produces("application/json")]
         [ProducesResponseType(typeof(Person), 200)]
         [ProducesResponseType(typeof(string), 204)]
-        public IActionResult Login([Bind("name,age")] Person person)
+        public IResult Login([Bind("name,age")] Person person)
         {
-            Results.NoContent();
+            return Results.NoContent();
         }
     }
 }
