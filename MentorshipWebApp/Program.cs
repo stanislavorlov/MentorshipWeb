@@ -14,12 +14,14 @@ builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services.Configure<ProductSettings>(builder.Configuration.GetSection("ProductSettingsConfiguration"));
 
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(o => {
-    o.IdleTimeout = TimeSpan.FromMinutes(20);
-    o.Cookie.HttpOnly = true;
-    o.Cookie.IsEssential = true;
-});
+builder.Services.AddMemoryCache();
+builder.Services.AddResponseCaching();
+
+//builder.Services.AddSession(o => {
+//    o.IdleTimeout = TimeSpan.FromMinutes(20);
+//    o.Cookie.HttpOnly = true;
+//    o.Cookie.IsEssential = true;
+//});
 
 var loggerFactory = LoggerFactory.Create(builder =>
 {
@@ -90,6 +92,8 @@ app.UseMiddleware<CustomMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseResponseCaching();
+
 app.MapControllers();
 
 if (builder.Environment.IsDevelopment())
@@ -127,7 +131,7 @@ app.UseStatusCodePages(async (StatusCodeContext statusCodeContext) =>
     }
 });
 
-app.UseSession();
+//app.UseSession();
 
 //app.Run(async (context) =>
 //{

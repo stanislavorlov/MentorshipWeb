@@ -5,6 +5,7 @@ using MentorshipWebApp.Interface;
 using MentorshipWebApp.Model;
 using Microsoft.Extensions.Options;
 using System.Text;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MentorshipWebApp.Controllers
 {
@@ -22,31 +23,41 @@ namespace MentorshipWebApp.Controllers
 
         private ILoggerFactory loggerFactory { get; set; }
 
-        public ProductController(IProductService productService,
+        private IMemoryCache memoryCache { get; set; }
+
+        public ProductController(
+            IProductService productService,
             IOptions<ProductSettings> options,
             ILogger<ProductController> logger,
             ILoggerProvider loggerProvider,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IMemoryCache memoryCache)
         {
             ProductService = productService;
             this.logger = logger;
             this.loggerFactory = loggerFactory;
+            this.memoryCache = memoryCache;
         }
 
         [HttpGet("{id}")]
+        [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any, NoStore = true, 
+            VaryByHeader = "Client-Id", VaryByQueryKeys = new string[] { "clientId" })]
         public IActionResult Action([FromQuery] int id)
         {
             var logger = this.loggerFactory.CreateLogger<ProductController>();
 
             var context = HttpContext;
 
-            HttpContext.Session.Set("key", Encoding.UTF8.GetBytes("Hello world!"));
+            //HttpContext.Session.Set("key", Encoding.UTF8.GetBytes("Hello world!"));
 
             var features = context.Features.ToList();
 
             logger.LogDebug("Debug Log");
             logger.LogInformation("Information Log");
             logger.LogWarning("Warning Log");
+
+            this.memoryCache.Set("id12345", new { Id = 1, Name = "Person Name", Age = 25 },
+                DateTime.Now.AddSeconds(30));
 
             try
             {
@@ -65,6 +76,8 @@ namespace MentorshipWebApp.Controllers
         [HttpPost("details")]
         public IActionResult Details([FromQuery] int id, [FromBody] Details details)
         {
+            var personCacheObj = this.memoryCache.Get("id12345");
+
             return Ok("details");
         }
     }
