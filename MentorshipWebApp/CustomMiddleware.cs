@@ -19,6 +19,13 @@ namespace MentorshipWebApp
         {
             context.Items["test_item"] = "Context item from Middleware";
 
+            await _next(context);
+
+            if (context.Request.Path.Value.Contains(""))
+            {
+                // do something
+            }
+
             //context.Request
             //context.Response
             //context.Items
@@ -42,7 +49,7 @@ namespace MentorshipWebApp
             //    var line = sr.ReadLine();
             //}
 
-            await _next(context);
+
         }
     }
 }
