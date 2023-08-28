@@ -4,6 +4,7 @@ using MentorshipWebApp.Interface;
 using MentorshipWebApp.Repositories;
 using MentorshipWebApp.Model;
 using Microsoft.AspNetCore.Diagnostics;
+using MentorshipWebApp.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +48,9 @@ builder.Services.AddSingleton<IProductRepo, ProductRepo>();
 builder.Services
     .AddControllers(options =>
     {
-        
+        options.Filters.Add(typeof(EndpointFilter));
+        options.Filters.Add(typeof(CustomActionFilter));
+        options.Filters.Add(typeof(ResultFilter));
     })
     .AddMvcOptions((options) => { });
 

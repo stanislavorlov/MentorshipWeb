@@ -1,6 +1,6 @@
 ﻿namespace MentorshipWebApp.Filters
 {
-    public class EndpointFilter : IEndpointFilter
+    public class EndpointFilter : Attribute, IEndpointFilter
     {
         public ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
         {
