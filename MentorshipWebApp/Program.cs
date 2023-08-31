@@ -5,6 +5,8 @@ using MentorshipWebApp.Repositories;
 using MentorshipWebApp.Model;
 using Microsoft.AspNetCore.Diagnostics;
 using MentorshipWebApp.Filters;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +16,29 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Configuration.AddJsonFile("appsettings.json");
 
 builder.Services.Configure<ProductSettings>(builder.Configuration.GetSection("ProductSettingsConfiguration"));
+
+builder.Services
+    //.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    //.AddJwtBearer();
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(o =>
+    {
+        o.Cookie.Name = "my_custom_cookie";
+        o.ExpireTimeSpan = new TimeSpan();
+        o.SlidingExpiration = true;
+    });
+//.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//.AddJwtBearer(o =>
+//{
+//    o.Audience = "";
+//    o.Authority = "";
+//    o.ClaimsIssuer = "";
+//});
+
+builder.Services.AddAuthorization(o =>
+{
+    //o.AddPolicy("CustomPolicy", policy => policy.)
+});
 
 builder.Services.AddMemoryCache();
 builder.Services.AddResponseCaching();
@@ -52,7 +77,7 @@ builder.Services
         options.Filters.Add(typeof(CustomActionFilter));
         options.Filters.Add(typeof(ResultFilter));
     })
-    .AddMvcOptions((options) => { });
+    .AddMvcOptions((options) => {  });
 
 builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -74,10 +99,6 @@ builder.Services.AddSwaggerGen(options =>
     }));
 
 builder.Services.AddControllers();
-
-builder.Services
-    .AddAuthentication()
-    .AddCookie();
 
 var app = builder.Build();
 
