@@ -5,77 +5,37 @@ using MentorshipWebApp.Repositories;
 using MentorshipWebApp.Model;
 using Microsoft.AspNetCore.Diagnostics;
 using MentorshipWebApp.Filters;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddCommandLine(args);
-builder.Configuration.AddEnvironmentVariables();
-
-builder.Configuration.AddJsonFile("appsettings.json");
-
-builder.Services.Configure<ProductSettings>(builder.Configuration.GetSection("ProductSettingsConfiguration"));
-
-builder.Services
-    //.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    //.AddJwtBearer();
-    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(o =>
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(o =>
+{
+    o.TokenValidationParameters = new TokenValidationParameters
     {
-        o.Cookie.Name = "my_custom_cookie";
-        o.ExpireTimeSpan = new TimeSpan();
-        o.SlidingExpiration = true;
-    });
-//.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//.AddJwtBearer(o =>
-//{
-//    o.Audience = "";
-//    o.Authority = "";
-//    o.ClaimsIssuer = "";
-//});
-
-builder.Services.AddAuthorization(o =>
-{
-    //o.AddPolicy("CustomPolicy", policy => policy.)
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = false,
+        ValidateIssuerSigningKey = true
+    };
 });
 
-builder.Services.AddMemoryCache();
-builder.Services.AddResponseCaching();
-
-//builder.Services.AddSession(o => {
-//    o.IdleTimeout = TimeSpan.FromMinutes(20);
-//    o.Cookie.HttpOnly = true;
-//    o.Cookie.IsEssential = true;
-//});
-
-var loggerFactory = LoggerFactory.Create(builder =>
-{
-    builder.AddConsole();
-    builder.SetMinimumLevel(LogLevel.Debug);
-});
-
-//builder.Services.AddSingleton<ILoggerFactory>(loggerFactory);
-
-builder.Logging
-    .AddConsole();
-    //.SetMinimumLevel(LogLevel.Debug);
-
-// every service invocation generates a new instance per Method
-builder.Services.AddSingleton<IProductService, ProductService>();
-
-//// every service per Request (HttpRequest, Event, Timer)
-builder.Services.AddSingleton<IProductRepo, ProductRepo>();
-
-//// single instance per application
-//builder.Services.AddSingleton<IProductService, ProductService3>();
+builder.Services.AddAuthorization();
 
 builder.Services
     .AddControllers(options =>
     {
-        options.Filters.Add(typeof(EndpointFilter));
-        options.Filters.Add(typeof(CustomActionFilter));
-        options.Filters.Add(typeof(ResultFilter));
     })
     .AddMvcOptions((options) => {  });
 
@@ -109,13 +69,10 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseMiddleware<CustomMiddleware>();
-
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseAuthentication();
 
 app.UseResponseCaching();
 
@@ -127,44 +84,7 @@ if (builder.Environment.IsDevelopment())
 }
 
 app.UseRouting();
-/*
-app.UseEndpoints(c =>
-{
-    
-});
-*/
 
-app.UseExceptionHandler(config => config.Run(async context => await context.Response.WriteAsync("")));
-
-app.UseStatusCodePages(async (StatusCodeContext statusCodeContext) =>
-{
-    var response = statusCodeContext.HttpContext.Response;
-
-    switch (response.StatusCode)
-    {
-        case 401:
-            await response.WriteAsync("");
-            break;
-        case 403:
-            response.Redirect("/Login");
-            break;
-        case 404:
-        case 400:
-        case 500:
-            //_logger.LogError("");
-            break;
-    }
-});
-
-//app.UseSession();
-
-//app.Run(async (context) =>
-//{
-//    int a = 5;
-//    int b = 0;
-//    int c = a / b;
-        
-//    await context.Response.WriteAsync(c.ToString());
-//});
+app.UseAuthorization();
 
 app.Run();

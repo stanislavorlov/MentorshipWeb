@@ -1,60 +1,68 @@
-﻿using MentorshipWebApp.Model;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace MentorshipWebApp.Controllers
 {
-    [ApiController]
-    [Route("[controller]/[action]")]
-    public class AccountController : ControllerBase
+    [Route("[controller]")]
+    public class AccountController : Controller
     {
-        [HttpGet()]
-        public async Task<IActionResult> Login()
+        private string _jwtIssuer = string.Empty;
+        private string _jwtAudience = string.Empty;
+        private string _jwtKey = string.Empty;
+
+        public AccountController(IConfiguration configuration)
         {
-            var claims = new List<Claim> { };
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            await HttpContext.SignInAsync(new ClaimsPrincipal(claimsIdentity));
-
-            await HttpContext.SignOutAsync();
-
-            if (true)
-            {
-                await HttpContext.ForbidAsync();
-            }
-
-            if (HttpContext.User.IsInRole(""))
-            {
-
-            }
-
-            HttpContext.User.HasClaim(c => c.Value == "custom_claim");
-            //var claim = HttpContext.User.Claims.FirstOrDefault(c => c.Subject == ClaimsIdentity.DefaultIssuer);
-
-            if (claim != null)
-            {
-
-            }
-
-            return Ok();
+            _jwtIssuer = configuration["Jwt:Issuer"];
+            _jwtAudience = configuration["Jwt:Audience"];
+            _jwtKey = configuration["Jwt:Key"];
         }
 
-        [HttpGet]
-        public IActionResult Details()
+        [HttpPost]
+        public IActionResult Login(string username, string password, string role)
         {
-            if (User.Identity.IsAuthenticated)
+            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password) && 
+                !string.IsNullOrEmpty(role))
             {
-                //User.Identity.Name
-                if (User.HasClaim(c => c.Value == "custom_claim"))
-                {
+                var issuer = _jwtIssuer;
+                var audience = _jwtAudience;
+                
+                var key = Encoding.ASCII.GetBytes(_jwtKey);
 
-                }
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                        new Claim("Id", Guid.NewGuid().ToString()),
+                        new Claim(JwtRegisteredClaimNames.Name, username),
+                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                        new Claim(ClaimsIdentity.DefaultRoleClaimType, role),
+                    }),
+                    Expires = DateTime.UtcNow.AddMinutes(5),
+                    Issuer = issuer,
+                    Audience = audience,
+                    SigningCredentials = new SigningCredentials
+                    (new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha512Signature)
+                };
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var jwtToken = tokenHandler.WriteToken(token);
+                var stringToken = tokenHandler.WriteToken(token);
+                
+                return Ok(stringToken);
             }
+
+            return Unauthorized();
+        }
+
+        [HttpPost("refresh")]
+        public IActionResult RefreshToken(string accessToken, string refreshToken)
+        {
+            // ToDo: https://code-maze.com/using-refresh-tokens-in-asp-net-core-authentication/
 
             return Ok();
         }
